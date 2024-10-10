@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Bienvenue, {{ username }}</h1>
+    <p class="text-center">Votre rôle : Usager</p>
+
+    <div class="my-5">
+        <h2>Liste des places disponibles</h2>
+        <table class="table table-bordered table-hover text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Numéro de place</th>
+                    <th scope="col">Statut</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for spot in parking_spots %}
+                <tr class="{% if spot.status == 'libre' %}table-success{% else %}table-danger{% endif %}">
+                    <td>{{ spot.spot_number }}</td>
+                    <td>{{ spot.status }}</td>
+                    <td>{{ spot.spot_type }}</td>
+                    <td>
+                        {% if spot.status == 'libre' %}
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reservationModal{{ spot.id }}">Réserver</button>
+                        {% else %}
+                        <span class="text-muted">Indisponible</span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <div class="modal fade" id="reservationModal{{ spot.id }}" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="reservationModalLabel">Réservation pour la place {{ spot.spot_number }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="reservationForm{{ spot.id }}" method="POST" action="{{ url_for('reserve_spot', spot_id=spot.id) }}">
+                                    <div class="mb-3">
+                                        <label for="start_date" class="form-label">Date de début</label>
+                                        <input type="date" class="form-control" id="start_date{{ spot.id }}" name="start_date" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="start_time" class="form-label">Heure de début</label>
+                                        <input type="time" class="form-control" id="start_time{{ spot.id }}" name="start_time" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="end_date" class="form-label">Date de fin</label>
+                                        <input type="date" class="form-control" id="end_date{{ spot.id }}" name="end_date" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="end_time" class="form-label">Heure de fin</label>
+                                        <input type="time" class="form-control" id="end_time{{ spot.id }}" name="end_time" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="calculated_amount" class="form-label">Montant à payer</label>
+                                        <input type="text" class="form-control" id="calculated_amount{{ spot.id }}" name="calculated_amount" readonly>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Payer</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+<script>
+    function calculateAmount(spotId) {
+        const startDate = new Date(document.getElementById('start_date' + spotId).value + 'T' + document.getElementById('start_time' + spotId).value);
+        const endDate = new Date(document.getElementById('end_date' + spotId).value + 'T' + document.getElementById('end_time' + spotId).value);
+
+        if (startDate && endDate && startDate < endDate) {
+            const hours = Math.abs(endDate - startDate) / 36e5;
+            const amount = hours * 1;
+            document.getElementById('calculated_amount' + spotId).value = amount.toFixed(2) + ' €';
+        } else {
+            document.getElementById('calculated_amount' + spotId).value = '0.00 €';
+        }
+    }
+
+    document.querySelectorAll('[id^=start_date], [id^=start_time], [id^=end_date], [id^=end_time]').forEach(input => {
+        input.addEventListener('change', function() {
+            const spotId = this.id.replace(/\D/g, '');
+            calculateAmount(spotId);
+        });
+    });
+</script>

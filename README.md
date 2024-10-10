@@ -2,7 +2,7 @@
 
 Projet fictif de gestion d'un parc automobile pour une agglomération française
 
-![](imagesReadme/landingscreen.png)
+![](MaquetteCap/imagesReadme/landingscreen.png)
 
 ## Scénario et contexte du projet 
 
@@ -26,6 +26,6 @@ Ce code servira de base pour les cours sur GIt advanced,  DevOps ( chaîne CI-CD
 
 ### Architecture fonctionnelle
 
-![](imagesReadme/archilogicielle.png)
+![](MaquetteCap/imagesReadme/archilogicielle.png)
 
 

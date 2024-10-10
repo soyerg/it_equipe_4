@@ -1,0 +1,131 @@
+/* Styles généraux */
+body {
+    font-family: 'Roboto', sans-serif;  /* Utilisation d'une police moderne */
+    background-color: #f8f9fa;          /* Fond clair pour un thème lumineux */
+    color: #333333;                     /* Texte gris foncé pour un bon contraste */
+}
+
+.container {
+    margin-top: 60px;                   /* Espace supérieur pour centrer les cartes */
+}
+
+.card {
+    background-color: #ffffff;          /* Fond blanc pour les cartes */
+    border-radius: 12px;                /* Bords arrondis pour un look propre */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Ombre douce pour une légère profondeur */
+    border: none;                       /* Retrait des bordures pour un design minimaliste */
+}
+
+.card-body {
+    padding: 2rem;                      /* Espacement confortable à l'intérieur des cartes */
+}
+
+.card-title {
+    color: #333333;                     /* Couleur du titre gris foncé pour un bon contraste */
+    font-weight: 600;                   /* Titre légèrement gras */
+    font-size: 1.5rem;                  /* Taille du titre agrandie pour la hiérarchie visuelle */
+}
+
+.btn-primary {
+    background-color: #007bff;          /* Bleu Bootstrap pour un style cohérent */
+    border: none;                       /* Retrait de la bordure pour un look net */
+    padding: 10px 20px;                 /* Boutons spacieux et faciles à cliquer */
+    font-size: 16px;                    /* Texte légèrement agrandi */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Transitions douces */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Effet lumineux subtil */
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;          /* Bleu plus foncé au survol */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.7); /* Lueur plus marquée */
+}
+
+.form-control {
+    background-color: #f1f1f1;          /* Fond clair pour les champs de saisie */
+    color: #333333;                     /* Texte gris foncé */
+    border-radius: 8px;                 /* Champs arrondis pour un look doux */
+    padding: 12px;                      /* Champs légèrement plus grands pour plus de confort */
+    border: 1px solid #ced4da;          /* Bordure gris clair pour un style épuré */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Animation douce lors du focus */
+}
+
+.form-control:focus {
+    border-color: #007bff;              /* Bordure bleue au focus */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3); /* Lueur bleue légère au focus */
+}
+
+/* Centrer et styliser le logo */
+img {
+    border-radius: 50%;                 /* Logo circulaire */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombre subtile pour le logo */
+    width: 100px;                       /* Taille ajustée du logo */
+}
+
+/* Lien de connexion/inscription */
+a {
+    color: #007bff;                     /* Lien bleu Bootstrap standard */
+    text-decoration: none;              /* Retrait du soulignement par défaut */
+}
+
+a:hover {
+    color: #0056b3;                     /* Bleu plus foncé au survol */
+    text-decoration: underline;         /* Soulignement au survol */
+}
+
+/* Messages flash */
+.flash-message {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #dc3545;                     /* Rouge Bootstrap pour les messages d'erreur */
+}
+
+/* Styles pour les sections centrées */
+.text-center p {
+    color: #555555;                     /* Texte gris moyen pour les instructions */
+    font-size: 14px;
+}
+
+/* Styles pour le tableau */
+.table {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f9f9f9;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Boutons de tableau */
+.table .btn {
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+/* Modales */
+.modal-content {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Responsive design pour petits écrans */
+@media (max-width: 576px) {
+    .container {
+        margin-top: 30px;               /* Réduction de l'espace pour petits écrans */
+    }
+
+    .card-body {
+        padding: 1.5rem;                /* Espacement intérieur ajusté */
+    }
+
+    .btn-primary {
+        padding: 8px 12px;              /* Boutons plus petits sur petits écrans */
+    }
+}

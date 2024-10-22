@@ -2,9 +2,9 @@ import subprocess
 from werkzeug.security import generate_password_hash
 
 config = {
-    'user': 'ericrj',
-    'password': '1610',
-    'host': 'localhost',
+    'user': 'root',
+    'password': 'rootroot',
+    'host': 'it-chaircapgemini.c1q8gu2s6pm0.eu-north-1.rds.amazonaws.com',
     'port': '3306'
 }
 

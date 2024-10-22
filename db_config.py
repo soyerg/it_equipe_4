@@ -7,9 +7,9 @@ def get_db_url(config):
 configurations = {
     'PROD': {
         'parking_db': {
-            'user': 'ericrj',
-            'password': '1610',
-            'host': 'host.docker.internal',
+            'user': 'root',
+            'password': 'rootroot',
+            'host': 'it-chaircapgemini.c1q8gu2s6pm0.eu-north-1.rds.amazonaws.com',
             'port': '3306',
             'database': 'parking_db'
         }

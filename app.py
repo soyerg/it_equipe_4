@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, Role, ParkingSpot, ParkingReservation
+from models import db, User, Role, ParkingSpot, ParkingReservation, Vehicle
 from db_config import get_connection
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -10,21 +10,25 @@ from apscheduler.schedulers.background import BackgroundScheduler
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
 
-conn = get_connection('PROD', 'parking_db')
+app.config['SQLALCHEMY_DATABASE_URI'] = get_connection('PROD', 'parking_db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-if conn:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://ericrj:1610@localhost/parking_db?charset=utf8mb4&collation=utf8mb4_general_ci'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
-else:
-    print("Impossible de se connecter à la base de données.")
+db.init_app(app)
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    with app.app_context():
+        return db.session.get(User, int(user_id))
+
+@app.route('/')
+def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -181,14 +185,29 @@ def dashboard():
         return render_template('admin_dashboard.html', username=current_user.username, users=users, roles=roles, parking_spots=parking_spots)
 
     elif current_user.role_id == 2:
-        return render_template('agent_dashboard.html', username=current_user.username)
+        occupied_spots = ParkingSpot.query.filter_by(status='occupée').all()
+        free_spots = ParkingSpot.query.filter_by(status='libre').all()
 
+        occupied_count = len(occupied_spots)
+        free_count = len(free_spots)
+
+        return render_template('agent_dashboard.html',
+                               username=current_user.username,
+                               occupied_spots=occupied_spots,
+                               free_spots=free_spots,
+                               occupied_count=occupied_count,
+                               free_count=free_count,
+                               datetime=datetime)
     elif current_user.role_id == 3:
         parking_spots = ParkingSpot.query.all()
         return render_template('usager_dashboard.html', username=current_user.username, parking_spots=parking_spots)
 
     else:
         return "Invalid role", 403
+
+
+
+
 
 
 
@@ -257,37 +276,55 @@ def delete_parking_spot(spot_id):
 def reserve_spot(spot_id):
     spot = ParkingSpot.query.get(spot_id)
     if spot and spot.status == 'libre':
-        spot.status = 'occupée'
+        vehicle_id = request.form.get('vehicle_id')
+        start_date = request.form.get('start_date') + ' ' + request.form.get('start_time')
+        end_date = request.form.get('end_date') + ' ' + request.form.get('end_time')
+        start_time = datetime.strptime(start_date, '%Y-%m-%d %H:%M')
+        end_time = datetime.strptime(end_date, '%Y-%m-%d %H:%M')
 
+        # Calculer le montant (1€ par heure)
+        total_hours = (end_time - start_time).total_seconds() / 3600
+        amount_paid = round(total_hours, 2)
+
+        # Créer la réservation
         new_reservation = ParkingReservation(
             user_id=current_user.id,
             parking_spot_id=spot.id,
-            start_time=datetime.now(),
-            end_time=datetime.now() + timedelta(hours=2),
-            amount_paid=10.00,
+            start_time=start_time,
+            end_time=end_time,
+            amount_paid=amount_paid,
             payment_status='payé'
         )
+
+        # Mettre à jour l'état de la place
+        spot.status = 'occupée'
+        spot.vehicle_id = vehicle_id
 
         db.session.add(new_reservation)
         db.session.commit()
 
-        flash(f'La place {spot.spot_number} a été réservée avec succès.', 'success')
+        flash(f'La place {spot.spot_number} a été réservée avec succès pour {amount_paid} €.', 'success')
     else:
         flash('Cette place est déjà occupée.', 'danger')
 
     return redirect(url_for('dashboard'))
 
+
 def check_expired_reservations():
-    now = datetime.utcnow()
-    expired_reservations = ParkingReservation.query.filter(ParkingReservation.end_time <= now, ParkingReservation.payment_status == 'payé').all()
+    with app.app_context():
+        now = datetime.utcnow()
+        expired_reservations = ParkingReservation.query.filter(
+            ParkingReservation.end_time <= now,
+            ParkingReservation.payment_status == 'payé'
+        ).all()
 
-    for reservation in expired_reservations:
-        parking_spot = ParkingSpot.query.get(reservation.parking_spot_id)
-        parking_spot.status = 'libre'
-        db.session.delete(reservation)
-        db.session.commit()
+        for reservation in expired_reservations:
+            parking_spot = db.session.get(ParkingSpot, reservation.parking_spot_id)
+            parking_spot.status = 'libre'
+            db.session.delete(reservation)
+            db.session.commit()
 
-    print(f"Réservations expirées vérifiées à {now}")
+        print(f"Réservations expirées vérifiées à {now}")
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
@@ -296,7 +333,8 @@ def start_scheduler():
 
 if __name__ == '__main__':
     start_scheduler()
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
+
 
 
 

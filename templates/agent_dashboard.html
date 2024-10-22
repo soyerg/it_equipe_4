@@ -5,8 +5,100 @@
     <h1 class="text-center">Bienvenue, {{ username }}</h1>
     <p class="text-center">Votre rôle : Agent</p>
 
-    <div class="alert alert-info text-center" role="alert">
-        <strong>Note:</strong> Le contenu sera bientôt disponible.
+    <h2 class="text-center mt-5">État des places de parking</h2>
+    <div class="d-flex justify-content-center">
+        <canvas id="parkingChart" style="max-width: 300px; max-height: 300px;"></canvas>
     </div>
+
+    <h2>Véhicules stationnés (occupés)</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Numéro de place</th>
+                <th>Numéro de plaque</th>
+                <th>Durée de stationnement</th>
+                <th>Heure de début</th>
+                <th>Heure de fin</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for spot in occupied_spots %}
+            <tr>
+                <td>{{ spot.spot_number }}</td>
+                {% if spot.reservations %}
+                    <td>{{ spot.vehicle.license_plate }}</td>
+                    {% set delta = datetime.utcnow() - spot.reservations[0].start_time %}
+                    <td>
+                        {% set days = delta.days %}
+                        {% set hours = delta.seconds // 3600 %}
+                        {% set minutes = (delta.seconds % 3600) // 60 %}
+                        {{ days }} jours, {{ hours }} heures, {{ minutes }} minutes
+                    </td>
+                    <td>{{ spot.reservations[0].start_time }}</td>
+                    <td>{{ spot.reservations[0].end_time }}</td>
+                {% else %}
+                    <td colspan="4">Pas de réservation</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Places libres</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Numéro de place</th>
+                <th>Type de place</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for spot in free_spots %}
+            <tr>
+                <td>{{ spot.spot_number }}</td>
+                <td>{{ spot.spot_type }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const occupiedSpots = {{ occupied_count }};
+    const freeSpots = {{ free_count }};
+
+    const ctx = document.getElementById('parkingChart').getContext('2d');
+    const parkingChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Places Occupées', 'Places Libres'],
+            datasets: [{
+                label: 'Occupation des places',
+                data: [occupiedSpots, freeSpots],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

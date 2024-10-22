@@ -31,6 +31,7 @@
                     </td>
                 </tr>
 
+                <!-- Modal de réservation -->
                 <div class="modal fade" id="reservationModal{{ spot.id }}" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -40,6 +41,14 @@
                             </div>
                             <div class="modal-body">
                                 <form id="reservationForm{{ spot.id }}" method="POST" action="{{ url_for('reserve_spot', spot_id=spot.id) }}">
+                                    <div class="mb-3">
+                                        <label for="vehicle_id" class="form-label">Sélectionner un véhicule</label>
+                                        <select class="form-control" id="vehicle_id" name="vehicle_id" required>
+                                            {% for vehicle in vehicles %}
+                                                <option value="{{ vehicle.id }}">{{ vehicle.license_plate }} ({{ vehicle.vehicle_type.type_name }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                     <div class="mb-3">
                                         <label for="start_date" class="form-label">Date de début</label>
                                         <input type="date" class="form-control" id="start_date{{ spot.id }}" name="start_date" required>
@@ -60,8 +69,27 @@
                                         <label for="calculated_amount" class="form-label">Montant à payer</label>
                                         <input type="text" class="form-control" id="calculated_amount{{ spot.id }}" name="calculated_amount" readonly>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">Payer</button>
+                                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#confirmModal{{ spot.id }}">Confirmer et payer</button>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de confirmation -->
+                <div class="modal fade" id="confirmModal{{ spot.id }}" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmModalLabel">Confirmation de paiement</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Confirmez-vous la réservation de la place {{ spot.spot_number }} pour un montant de <span id="confirm_amount{{ spot.id }}"></span> ?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" form="reservationForm{{ spot.id }}" class="btn btn-primary">Payer</button>
                             </div>
                         </div>
                     </div>
@@ -79,11 +107,14 @@
         const endDate = new Date(document.getElementById('end_date' + spotId).value + 'T' + document.getElementById('end_time' + spotId).value);
 
         if (startDate && endDate && startDate < endDate) {
-            const hours = Math.abs(endDate - startDate) / 36e5;
-            const amount = hours * 1;
+            const diffMs = endDate - startDate;
+            const hours = Math.ceil(diffMs / (1000 * 60 * 15)) * 0.25; // Tranches de 15 minutes, arrondi vers le haut
+            const amount = hours * 1; // 1€ par heure
             document.getElementById('calculated_amount' + spotId).value = amount.toFixed(2) + ' €';
+            document.getElementById('confirm_amount' + spotId).innerText = amount.toFixed(2) + ' €';
         } else {
             document.getElementById('calculated_amount' + spotId).value = '0.00 €';
+            document.getElementById('confirm_amount' + spotId).innerText = '0.00 €';
         }
     }
 

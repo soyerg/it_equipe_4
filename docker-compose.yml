@@ -3,17 +3,6 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
-    depends_on:
-      - db
-    environment:
-      - DATABASE_URL=mysql+pymysql://capgemini4:password@db:3306/parking_db
-  db:
-    image: mariadb:latest
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: parking_db
-      MYSQL_USER: capgemini4
-      MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
+      - "5001:5000"
+    volumes:
+      - .:/app

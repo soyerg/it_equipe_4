@@ -2,15 +2,18 @@ import subprocess
 from werkzeug.security import generate_password_hash
 from faker import Faker
 import random
+from db_config import get_connection
+
+db_url = get_connection('PROD', 'parking_db')
 
 config = {
-    'user': 'ericrj',
-    'password': '1610',
-    'host': 'localhost',
-    'port': '3306'
+    'user': db_url.split('//')[1].split(':')[0],
+    'password': db_url.split(':')[2].split('@')[0],
+    'host': db_url.split('@')[1].split(':')[0],
+    'port': db_url.split(':')[-1].split('/')[0],
 }
 
-mysql_executable_path = r"C:\Program Files\MariaDB 11.4\bin\mysql.exe"
+mysql_executable_path = "mysql"
 fake = Faker('fr_FR')
 
 def execute_sql(database_name, sql_query):

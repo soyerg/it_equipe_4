@@ -9,7 +9,7 @@ config = {
 }
 
 
-mysql_executable_path = r"C:\Program Files\MariaDB 11.4\bin\mysql.exe"
+mysql_executable_path = "mysql"
 
 def drop_database(database_name):
     command = [

@@ -5,3 +5,5 @@ Flask-Login
 psycopg2-binary
 Werkzeug
 pymysql
+apscheduler
+mysql-connector-python

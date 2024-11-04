@@ -19,7 +19,7 @@ configurations = {
         'parking_db': {
             'user': 'ericrj',
             'password': '1610',
-            'host': 'host.docker.internal',
+            'host': 'localhost',
             'port': '3306',
             'database': 'parking_db'
         }

@@ -7,3 +7,4 @@ Werkzeug
 pymysql
 apscheduler
 mysql-connector-python
+email-validator

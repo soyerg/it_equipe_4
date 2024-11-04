@@ -1,302 +1,166 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="container mt-5">
-        <h1 class="text-center">Bienvenue, {{ username }}</h1>
-        <p class="text-center">Votre rôle : Admin</p>
-
-
-        <div class="card mt-5">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h2>Liste des places de parking</h2>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addParkingSpotModal">Ajouter une place</button>
+<div class="container my-5">
+    <div class="text-center mb-4">
+        <h1 class="display-4 fw-bold">Tableau de bord Administrateur</h1>
+        <p class="text-muted">Bienvenue, {{ username }}. Votre rôle : Administrateur</p>
+        <hr class="my-4">
     </div>
-    <div class="card-body">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Numéro de place</th>
-                    <th>Statut</th>
-                    <th>Type</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for spot in parking_spots %}
-                <tr>
-                    <td>{{ spot.spot_number }}</td>
-                    <td>{{ spot.status }}</td>
-                    <td>{{ spot.spot_type }}</td>
-                    <td>
-                        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editParkingSpotModal{{ spot.id }}">Modifier</button>
-                        <form method="POST" action="{{ url_for('delete_parking_spot', spot_id=spot.id) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-danger">Supprimer</button>
-                        </form>
-                    </td>
-                </tr>
 
-                <!-- Modal de modification de la place de parking -->
-                <div class="modal fade" id="editParkingSpotModal{{ spot.id }}" tabindex="-1" aria-labelledby="editParkingSpotModalLabel{{ spot.id }}" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Modifier la place de parking</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form method="POST" action="{{ url_for('edit_parking_spot', spot_id=spot.id) }}">
-                                    <div class="mb-3">
-                                        <label for="spotNumber{{ spot.id }}" class="form-label">Numéro de place</label>
-                                        <input type="text" class="form-control" id="spotNumber{{ spot.id }}" name="spot_number" value="{{ spot.spot_number }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="status{{ spot.id }}" class="form-label">Statut</label>
-                                        <select class="form-control" id="status{{ spot.id }}" name="status" required>
-                                            <option value="libre" {% if spot.status == 'libre' %}selected{% endif %}>Libre</option>
-                                            <option value="occupée" {% if spot.status == 'occupée' %}selected{% endif %}>Occupée</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="spotType{{ spot.id }}" class="form-label">Type de place</label>
-                                        <select class="form-control" id="spotType{{ spot.id }}" name="spot_type" required>
-                                            <option value="normale" {% if spot.spot_type == 'normale' %}selected{% endif %}>Normale</option>
-                                            <option value="handicapé" {% if spot.spot_type == 'handicapé' %}selected{% endif %}>Handicapé</option>
-                                            <option value="2 roues" {% if spot.spot_type == '2 roues' %}selected{% endif %}>2 roues</option>
-                                            <option value="électrique" {% if spot.spot_type == 'électrique' %}selected{% endif %}>Électrique</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Modifier</button>
-                                </form>
-                            </div>
-                        </div>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="accordion" id="adminDashboardAccordion">
+                <!-- Section: Liste des places de parking -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#parkingSpotsSection" aria-expanded="false" aria-controls="parkingSpotsSection">
+                                Liste des places de parking
+                            </button>
+                        </h2>
+                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addParkingSpotModal">Ajouter une place</button>
                     </div>
-                </div>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="modal fade" id="addParkingSpotModal" tabindex="-1" aria-labelledby="addParkingSpotModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Ajouter une place de parking</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" action="{{ url_for('create_parking_spot') }}">
-                    <div class="mb-3">
-                        <label for="spot_number" class="form-label">Numéro de place</label>
-                        <input type="text" class="form-control" id="spot_number" name="spot_number" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Statut</label>
-                        <select class="form-control" id="status" name="status" required>
-                            <option value="libre">Libre</option>
-                            <option value="occupée">Occupée</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="spot_type" class="form-label">Type de place</label>
-                        <select class="form-control" id="spot_type" name="spot_type" required>
-                            <option value="normale">Normale</option>
-                            <option value="handicapé">Handicapé</option>
-                            <option value="2 roues">2 roues</option>
-                            <option value="électrique">Électrique</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Ajouter</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-        <div class="card mt-5">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2>Liste des utilisateurs</h2>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">Ajouter un utilisateur</button>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nom d'utilisateur</th>
-                            <th>Email</th>
-                            <th>Rôle</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in users %}
-                        <tr>
-                            <td>{{ user.id }}</td>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>{{ user.role.role_name }}</td>
-                            <td>
-                                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">Modifier</button>
-                                <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display: inline;">
-                                    <button type="submit" class="btn btn-danger">Supprimer</button>
-                                </form>
-                            </td>
-                        </tr>
-
-
-                        <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ user.id }}" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Modifier l'utilisateur</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form method="POST" action="{{ url_for('edit_user', user_id=user.id) }}">
-                                            <div class="mb-3">
-                                                <label for="username{{ user.id }}" class="form-label">Nom d'utilisateur</label>
-                                                <input type="text" class="form-control" id="username{{ user.id }}" name="username" value="{{ user.username }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="email{{ user.id }}" class="form-label">Email</label>
-                                                <input type="email" class="form-control" id="email{{ user.id }}" name="email" value="{{ user.email }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="role{{ user.id }}" class="form-label">Rôle</label>
-                                                <select class="form-control" id="role{{ user.id }}" name="role_id" required>
-                                                    {% for role in roles %}
-                                                    <option value="{{ role.id }}" {% if user.role_id == role.id %}selected{% endif %}>{{ role.role_name }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary">Modifier</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Ajouter un utilisateur</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="POST" action="{{ url_for('create_user') }}">
-                            <div class="mb-3">
-                                <label for="username" class="form-label">Nom d'utilisateur</label>
-                                <input type="text" class="form-control" id="username" name="username" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Mot de passe</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="role" class="form-label">Rôle</label>
-                                <select class="form-control" id="role" name="role_id" required>
-                                    {% for role in roles %}
-                                    <option value="{{ role.id }}">{{ role.role_name }}</option>
+                    <div id="parkingSpotsSection" class="collapse" aria-labelledby="parkingSpotsHeader" data-bs-parent="#adminDashboardAccordion">
+                        <div class="card-body p-4">
+                            <table class="table table-striped table-hover text-center align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">Numéro de place</th>
+                                        <th scope="col">Statut</th>
+                                        <th scope="col">Type</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for spot in parking_spots %}
+                                    <tr>
+                                        <td>{{ spot.spot_number }}</td>
+                                        <td>{{ spot.status }}</td>
+                                        <td>{{ spot.spot_type }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editParkingSpotModal{{ spot.id }}">Modifier</button>
+                                            <form method="POST" action="{{ url_for('delete_parking_spot', spot_id=spot.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                                            </form>
+                                        </td>
+                                    </tr>
                                     {% endfor %}
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Ajouter</button>
-                        </form>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Liste des utilisateurs -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#usersSection" aria-expanded="false" aria-controls="usersSection">
+                                Liste des utilisateurs
+                            </button>
+                        </h2>
+                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">Ajouter</button>
+                    </div>
+                    <div id="usersSection" class="collapse" aria-labelledby="usersHeader" data-bs-parent="#adminDashboardAccordion">
+                        <div class="card-body p-4">
+                            <table class="table table-striped table-hover text-center align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Nom d'utilisateur</th>
+                                        <th scope="col">Email</th>
+                                        <th scope="col">Rôle</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>{{ user.id }}</td>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.role.role_name }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">Modifier</button>
+                                            <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Liste des rôles -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#rolesSection" aria-expanded="false" aria-controls="rolesSection">
+                                Liste des rôles
+                            </button>
+                        </h2>
+                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addRoleModal">Ajouter</button>
+                    </div>
+                    <div id="rolesSection" class="collapse" aria-labelledby="rolesHeader" data-bs-parent="#adminDashboardAccordion">
+                        <div class="card-body p-4">
+                            <table class="table table-striped table-hover text-center align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Nom du rôle</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for role in roles %}
+                                    <tr>
+                                        <td>{{ role.id }}</td>
+                                        <td>{{ role.role_name }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ role.id }}">Modifier</button>
+                                            <form method="POST" action="{{ url_for('delete_role', role_id=role.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-
-        <div class="card mt-5">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2>Liste des rôles</h2>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">Ajouter un rôle</button>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nom du rôle</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for role in roles %}
-                        <tr>
-                            <td>{{ role.id }}</td>
-                            <td>{{ role.role_name }}</td>
-                            <td>
-                                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ role.id }}">Modifier</button>
-                                <form method="POST" action="{{ url_for('delete_role', role_id=role.id) }}" style="display: inline;">
-                                    <button type="submit" class="btn btn-danger">Supprimer</button>
-                                </form>
-                            </td>
-                        </tr>
-
-
-                        <div class="modal fade" id="editRoleModal{{ role.id }}" tabindex="-1" aria-labelledby="editRoleModalLabel{{ role.id }}" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Modifier le rôle</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form method="POST" action="{{ url_for('edit_role', role_id=role.id) }}">
-                                            <div class="mb-3">
-                                                <label for="roleName{{ role.id }}" class="form-label">Nom du rôle</label>
-                                                <input type="text" class="form-control" id="roleName{{ role.id }}" name="role_name" value="{{ role.role_name }}" required>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary">Modifier</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <div class="modal fade" id="addRoleModal" tabindex="-1" aria-labelledby="addRoleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Ajouter un rôle</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="POST" action="{{ url_for('create_role') }}">
-                            <div class="mb-3">
-                                <label for="role_name" class="form-label">Nom du rôle</label>
-                                <input type="text" class="form-control" id="role_name" name="role_name" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Ajouter</button>
-                        </form>
-                    </div>
+        <!-- Section: Informations sur le parking pour l'administrateur -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h2 class="mb-0">Informations sur le Parking</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Capacité maximale :</strong> 500 places</li>
+                        <li><strong>Taux d’occupation actuel :</strong> 70%</li>
+                        <li><strong>Nombre de réservations aujourd'hui :</strong> 120</li>
+                        <li><strong>Maintenance :</strong> Aucune maintenance planifiée</li>
+                        <li><strong>Bornes de recharge :</strong> 20 disponibles</li>
+                        <li><strong>Accès de sécurité :</strong> Surveillance 24/7 avec caméras</li>
+                    </ul>
+                    <hr>
+                    <p class="text-muted small">Ces informations aident les administrateurs à gérer efficacement les opérations du parking et à maintenir un bon niveau de service pour les utilisateurs.</p>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
+<!-- Modals for adding and editing entries -->
+{% include 'admin_modals.html' %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

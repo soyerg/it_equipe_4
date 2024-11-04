@@ -43,18 +43,22 @@ class ParkingSpot(db.Model):
 
 
 class VehicleType(db.Model):
+    __tablename__ = 'vehicletype'  # Nom explicite de la table
     id = db.Column(db.Integer, primary_key=True)
     type_name = db.Column(db.String(50), unique=True, nullable=False)
 
 
+
 class Vehicle(db.Model):
+    __tablename__ = 'vehicle'  # Assurez-vous que le nom de la table est correct
     id = db.Column(db.Integer, primary_key=True)
     license_plate = db.Column(db.String(20), unique=True, nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    vehicle_type_id = db.Column(db.Integer, db.ForeignKey('vehicle_type.id'), nullable=False)
+    vehicle_type_id = db.Column(db.Integer, db.ForeignKey('vehicletype.id'), nullable=False)  # Vérifiez que le nom de la table est bien 'vehicletype'
 
     owner = db.relationship('User', backref=db.backref('vehicles', lazy=True))
     vehicle_type = db.relationship('VehicleType', backref=db.backref('vehicles', lazy=True))
+
 
 class ParkingReservation(db.Model):
     __tablename__ = 'parkingreservation'
@@ -69,3 +73,12 @@ class ParkingReservation(db.Model):
     user = db.relationship('User', backref=db.backref('reservations', lazy=True))
     parking_spot = db.relationship('ParkingSpot', backref=db.backref('reservations', lazy=True))
 
+class Payment(db.Model):
+    __tablename__ = 'payment'
+    id = db.Column(db.Integer, primary_key=True)
+    reservation_id = db.Column(db.Integer, db.ForeignKey('parkingreservation.id'), nullable=False)
+    payment_method = db.Column(db.Enum('carte bancaire', 'PayPal'), nullable=False)
+    payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+
+    reservation = db.relationship('ParkingReservation', backref=db.backref('payments', lazy=True))

@@ -1,69 +1,139 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center">Bienvenue, {{ username }}</h1>
-    <p class="text-center">Votre rôle : Agent</p>
-
-    <h2 class="text-center mt-5">État des places de parking</h2>
-    <div class="d-flex justify-content-center">
-        <canvas id="parkingChart" style="max-width: 300px; max-height: 300px;"></canvas>
+<div class="container my-5">
+    <div class="text-center mb-4">
+        <h1 class="display-4 fw-bold">Tableau de bord Agent</h1>
+        <p class="text-muted">Bienvenue {{ username }}.</p>
+        <hr class="my-4">
     </div>
 
-    <h2>Véhicules stationnés (occupés)</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Numéro de place</th>
-                <th>Numéro de plaque</th>
-                <th>Durée de stationnement</th>
-                <th>Heure de début</th>
-                <th>Heure de fin</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for spot in occupied_spots %}
-            <tr>
-                <td>{{ spot.spot_number }}</td>
-                {% if spot.reservations %}
-                    <td>{{ spot.vehicle.license_plate }}</td>
-                    {% set delta = datetime.utcnow() - spot.reservations[0].start_time %}
-                    <td>
-                        {% set days = delta.days %}
-                        {% set hours = delta.seconds // 3600 %}
-                        {% set minutes = (delta.seconds % 3600) // 60 %}
-                        {{ days }} jours, {{ hours }} heures, {{ minutes }} minutes
-                    </td>
-                    <td>{{ spot.reservations[0].start_time }}</td>
-                    <td>{{ spot.reservations[0].end_time }}</td>
-                {% else %}
-                    <td colspan="4">Pas de réservation</td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="accordion" id="agentDashboardAccordion">
 
-    <h2>Places libres</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Numéro de place</th>
-                <th>Type de place</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for spot in free_spots %}
-            <tr>
-                <td>{{ spot.spot_number }}</td>
-                <td>{{ spot.spot_type }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <!-- Section: État des places de parking -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#parkingStatusSection" aria-expanded="false" aria-controls="parkingStatusSection">
+                                État des places de parking
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="parkingStatusSection" class="collapse show" aria-labelledby="parkingStatusHeader" data-bs-parent="#agentDashboardAccordion">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-center">
+                                <canvas id="parkingChart" style="max-width: 300px; max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Véhicules stationnés (occupés) -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#occupiedSpotsSection" aria-expanded="false" aria-controls="occupiedSpotsSection">
+                                Véhicules stationnés (occupés)
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="occupiedSpotsSection" class="collapse" aria-labelledby="occupiedSpotsHeader" data-bs-parent="#agentDashboardAccordion">
+                        <div class="card-body p-4">
+                            <table class="table table-striped table-hover text-center align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Numéro de place</th>
+                                        <th>Numéro de plaque</th>
+                                        <th>Durée de stationnement</th>
+                                        <th>Heure de début</th>
+                                        <th>Heure de fin</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for spot in occupied_spots %}
+                                    <tr>
+                                        <td>{{ spot.spot_number }}</td>
+                                        {% if spot.reservations %}
+                                            <td>{{ spot.vehicle.license_plate }}</td>
+                                            {% set delta = datetime.utcnow() - spot.reservations[0].start_time %}
+                                            <td>
+                                                {% set days = delta.days %}
+                                                {% set hours = delta.seconds // 3600 %}
+                                                {% set minutes = (delta.seconds % 3600) // 60 %}
+                                                {{ days }} jours, {{ hours }} heures, {{ minutes }} minutes
+                                            </td>
+                                            <td>{{ spot.reservations[0].start_time }}</td>
+                                            <td>{{ spot.reservations[0].end_time }}</td>
+                                        {% else %}
+                                            <td colspan="4">Pas de réservation</td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Places libres -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#freeSpotsSection" aria-expanded="false" aria-controls="freeSpotsSection">
+                                Places libres
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="freeSpotsSection" class="collapse" aria-labelledby="freeSpotsHeader" data-bs-parent="#agentDashboardAccordion">
+                        <div class="card-body p-4">
+                            <table class="table table-striped table-hover text-center align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Numéro de place</th>
+                                        <th>Type de place</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for spot in free_spots %}
+                                    <tr>
+                                        <td>{{ spot.spot_number }}</td>
+                                        <td>{{ spot.spot_type }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Section: Informations sur le parking pour l'agent -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h2 class="mb-0">Informations sur le Parking</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Total de places occupées :</strong> {{ occupied_count }}</li>
+                        <li><strong>Total de places libres :</strong> {{ free_count }}</li>
+                        <li><strong>Type de surveillance :</strong> Vidéo surveillance 24/7</li>
+                        <li><strong>Alertes de fin de stationnement :</strong> Automatisées pour l'agent</li>
+                        <li><strong>Accès sécurisé :</strong> Badge et surveillance</li>
+                    </ul>
+                    <hr>
+                    <p class="text-muted small">Ces informations aident les agents à surveiller l'occupation du parking et à gérer les véhicules stationnés efficacement.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Chart.js -->
+<!-- Chart.js pour le graphique de l'état du parking -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>

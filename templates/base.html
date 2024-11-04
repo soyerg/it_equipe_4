@@ -6,24 +6,61 @@
     <title>{% block title %}Park & See{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #343a40;
+        }
+        .navbar {
+            background: #343a40;
+            padding: 0.3rem 1rem; /* Réduction de la hauteur */
+        }
+        .navbar-brand img {
+            border-radius: 50%;
+            width: 40px; /* Taille du logo ajustée */
+            height: 40px;
+        }
+        .navbar .navbar-text {
+            font-size: 0.85rem;
+            color: #adb5bd;
+        }
+        .navbar-nav .nav-link {
+            color: #adb5bd !important;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-link.active {
+            color: #ffffff !important;
+            font-weight: bold;
+        }
+        .footer {
+            background-color: #212529;
+            color: #adb5bd;
+            padding: 0.3rem 0; /* Réduction de la hauteur du footer */
+            font-size: 0.85rem;
+        }
+        .footer small {
+            color: #adb5bd;
+        }
+        .container {
+            max-width: 1200px;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" width="40" height="40" class="d-inline-block align-text-top me-2">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="me-2">
                 <span>Park & See</span>
             </a>
-            <span class="navbar-text text-white ms-auto me-4">
+            <span class="navbar-text text-center mx-auto">
                 Les StormTroopers, Équipe 4
             </span>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#">Dashboard</a>
+                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="#">Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
@@ -33,14 +70,14 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <main class="container mt-4">
         {% block content %}
         {% endblock %}
-    </div>
+    </main>
 
-    <footer class="footer mt-1 py-1 bg-dark text-white">
-        <div class="container text-center">
-            <small>&copy; Recrutez-nous chez Capgemini</small>
+    <footer class="footer text-center">
+        <div class="container">
+            <small>&copy; 2024 Les StormTroopers, Équipe 4 - Recrutez-nous chez Capgemini</small>
         </div>
     </footer>
 

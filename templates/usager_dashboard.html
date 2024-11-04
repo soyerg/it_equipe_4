@@ -2,120 +2,360 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="text-center">Bienvenue, {{ username }}</h1>
-    <p class="text-center">Votre rôle : Usager</p>
+    <div class="text-center mb-4">
+        <h1 class="display-4 fw-bold">Parking Capgemini - Le 147</h1>
+        <p class="lead text-muted">Bienvenue, {{ username }}. Votre rôle : Usager</p>
+        <hr class="my-4">
+    </div>
 
-    <div class="my-5">
-        <h2>Liste des places disponibles</h2>
-        <table class="table table-bordered table-hover text-center align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col">Numéro de place</th>
-                    <th scope="col">Statut</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for spot in parking_spots %}
-                <tr class="{% if spot.status == 'libre' %}table-success{% else %}table-danger{% endif %}">
-                    <td>{{ spot.spot_number }}</td>
-                    <td>{{ spot.status }}</td>
-                    <td>{{ spot.spot_type }}</td>
-                    <td>
-                        {% if spot.status == 'libre' %}
-                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reservationModal{{ spot.id }}">Réserver</button>
+    <div class="row">
+        <!-- Colonne gauche avec l'accordéon -->
+        <div class="col-md-8">
+            <div class="accordion" id="usagerDashboardAccordion">
+
+                <!-- Section: Liste des places de parking disponibles -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#parkingSpotsSection" aria-expanded="true" aria-controls="parkingSpotsSection">
+                Liste des places de parking disponibles
+            </button>
+        </h2>
+    </div>
+    <div id="parkingSpotsSection" class="collapse show" data-bs-parent="#usagerDashboardAccordion">
+        <div class="card-body p-4">
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Numéro de place</th>
+                        <th scope="col">Statut</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for spot in parking_spots %}
+                    <tr
+                        {% if spot.id in reserved_spot_ids %}
+                            class="table-info"
+                            title="Cette place est réservée par vous-même"
+                        {% elif spot.status == 'occupée' %}
+                            class="table-danger"
+                            title="Place réservée par un autre utilisateur"
                         {% else %}
-                        <span class="text-muted">Indisponible</span>
+                            class="table-success"
+                            title="Place libre"
                         {% endif %}
-                    </td>
-                </tr>
+                    >
+                        <td><strong>{{ spot.spot_number }}</strong></td>
+                        <td>
+                            {% if spot.status == 'libre' %}
+                                <span class="badge bg-success rounded-pill">Libre</span>
+                            {% elif spot.id in reserved_spot_ids %}
+                                <span class="badge bg-info text-dark rounded-pill">Réservée (Moi)</span>
+                            {% else %}
+                                <span class="badge bg-danger rounded-pill">Réservée</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ spot.spot_type | capitalize }}</td>
+                        <td>
+                            {% if spot.status == 'libre' %}
+                                <button class="btn btn-outline-primary" onclick="openReservationModal({{ spot.id }})">Réserver</button>
+                            {% elif spot.id in reserved_spot_ids %}
+                                <button class="btn btn-outline-secondary" disabled>Ma Réservation</button>
+                            {% else %}
+                                <span class="text-muted">Indisponible</span>
+                            {% endif %}
+                        </td>
+                    </tr>
 
-                <!-- Modal de réservation -->
-                <div class="modal fade" id="reservationModal{{ spot.id }}" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+                    <!-- Modal de réservation -->
+                    <div class="modal fade" id="reservationModal{{ spot.id }}" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">Réservation pour la place {{ spot.spot_number }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="reservationForm{{ spot.id }}" method="POST" action="{{ url_for('reserve_spot', spot_id=spot.id) }}">
+                                        <div class="mb-3">
+                                            <label for="vehicle_id" class="form-label">Sélectionner un véhicule</label>
+                                            <select class="form-control" id="vehicle_id" name="vehicle_id">
+                                                <option value="">Aucun</option>
+                                                {% for vehicle in vehicles %}
+                                                    <option value="{{ vehicle.id }}">{{ vehicle.license_plate }} ({{ vehicle.vehicle_type.type_name }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="start_date" class="form-label">Date de début</label>
+                                            <input type="date" class="form-control" id="start_date{{ spot.id }}" name="start_date" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="start_time" class="form-label">Heure de début</label>
+                                            <input type="time" class="form-control" id="start_time{{ spot.id }}" name="start_time" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="end_date" class="form-label">Date de fin</label>
+                                            <input type="date" class="form-control" id="end_date{{ spot.id }}" name="end_date" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="end_time" class="form-label">Heure de fin</label>
+                                            <input type="time" class="form-control" id="end_time{{ spot.id }}" name="end_time" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="calculated_amount" class="form-label">Montant à payer</label>
+                                            <input type="text" class="form-control" id="calculated_amount{{ spot.id }}" name="calculated_amount" readonly>
+                                        </div>
+                                        <button type="button" class="btn btn-success w-100" onclick="openConfirmModal({{ spot.id }})">Confirmer et payer</button>
+                                    </form>
+                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Mes véhicules -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#myVehiclesSection" aria-expanded="false" aria-controls="myVehiclesSection">
+                                Mes véhicules
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="myVehiclesSection" class="collapse" data-bs-parent="#userDashboardAccordion">
+                        <div class="card-body">
+                            <table class="table table-striped table-hover text-center align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Numéro de plaque</th>
+                                        <th>Type de véhicule</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if user_vehicles %}
+                                        {% for vehicle in user_vehicles %}
+                                        <tr>
+                                            <td>{{ vehicle.license_plate }}</td>
+                                            <td>{{ vehicle.vehicle_type.type_name }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2">Aucun véhicule enregistré</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                            <!-- Bouton d'ajout de véhicule -->
+                            <button type="button" class="btn btn-outline-primary mt-3" data-bs-toggle="modal" data-bs-target="#addVehicleModal">Ajouter un véhicule</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal d'ajout de véhicule -->
+                <div class="modal fade" id="addVehicleModal" tabindex="-1" aria-labelledby="addVehicleModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="reservationModalLabel">Réservation pour la place {{ spot.spot_number }}</h5>
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">Ajouter un véhicule</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <form id="reservationForm{{ spot.id }}" method="POST" action="{{ url_for('reserve_spot', spot_id=spot.id) }}">
+                                <form method="POST" action="{{ url_for('add_vehicle') }}">
                                     <div class="mb-3">
-                                        <label for="vehicle_id" class="form-label">Sélectionner un véhicule</label>
-                                        <select class="form-control" id="vehicle_id" name="vehicle_id" required>
-                                            {% for vehicle in vehicles %}
-                                                <option value="{{ vehicle.id }}">{{ vehicle.license_plate }} ({{ vehicle.vehicle_type.type_name }})</option>
+                                        <label for="license_plate" class="form-label">Numéro de plaque</label>
+                                        <input type="text" class="form-control" id="license_plate" name="license_plate" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vehicle_type" class="form-label">Type de véhicule</label>
+                                        <select class="form-control" id="vehicle_type" name="vehicle_type_id" required>
+                                            {% for vehicle_type in vehicle_types %}
+                                            <option value="{{ vehicle_type.id }}">{{ vehicle_type.type_name }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="start_date" class="form-label">Date de début</label>
-                                        <input type="date" class="form-control" id="start_date{{ spot.id }}" name="start_date" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="start_time" class="form-label">Heure de début</label>
-                                        <input type="time" class="form-control" id="start_time{{ spot.id }}" name="start_time" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="end_date" class="form-label">Date de fin</label>
-                                        <input type="date" class="form-control" id="end_date{{ spot.id }}" name="end_date" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="end_time" class="form-label">Heure de fin</label>
-                                        <input type="time" class="form-control" id="end_time{{ spot.id }}" name="end_time" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="calculated_amount" class="form-label">Montant à payer</label>
-                                        <input type="text" class="form-control" id="calculated_amount{{ spot.id }}" name="calculated_amount" readonly>
-                                    </div>
-                                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#confirmModal{{ spot.id }}">Confirmer et payer</button>
+                                    <button type="submit" class="btn btn-primary">Ajouter</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Modal de confirmation -->
-                <div class="modal fade" id="confirmModal{{ spot.id }}" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="confirmModalLabel">Confirmation de paiement</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Confirmez-vous la réservation de la place {{ spot.spot_number }} pour un montant de <span id="confirm_amount{{ spot.id }}"></span> ?</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                <button type="submit" form="reservationForm{{ spot.id }}" class="btn btn-primary">Payer</button>
-                            </div>
+                <!-- Section: Mes Modes de Paiement -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link text-white text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#paymentMethodsSection" aria-expanded="false" aria-controls="paymentMethodsSection">
+                                Mes Modes de Paiement
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="paymentMethodsSection" class="collapse" data-bs-parent="#usagerDashboardAccordion">
+                        <div class="card-body">
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Carte Bancaire (**** **** **** 1234)
+                                    <span class="badge bg-primary rounded-pill">Principal</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    PayPal (exemple@email.com)
+                                    <span class="badge bg-secondary rounded-pill">Secondaire</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
-            </tbody>
-        </table>
+
+                <!-- Section: Historique de Réservation -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+            <button class="btn btn-link text-dark text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#reservationHistorySection" aria-expanded="false" aria-controls="reservationHistorySection">
+                Historique de Réservation
+            </button>
+        </h2>
+    </div>
+    <div id="reservationHistorySection" class="collapse" data-bs-parent="#usagerDashboardAccordion">
+        <div class="card-body">
+            <table class="table table-striped text-center">
+                <thead>
+                    <tr>
+                        <th>Date de Début</th>
+                        <th>Date de Fin</th>
+                        <th>Montant Payé</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if user_reservations %}
+                        {% for reservation in user_reservations %}
+                        <tr>
+                            <td>{{ reservation.start_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ reservation.end_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ reservation.amount_paid }} €</td>
+                            <td>
+                                {% if reservation.payment_status == 'payé' %}
+                                    <span class="badge bg-success">Payé</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Échoué</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">Aucun historique de réservation disponible</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite : À propos du parking et Informations pratiques -->
+        <div class="col-md-4">
+            <!-- Section: À propos du parking -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-info text-white">
+                    <h2 class="mb-0">À propos du Parking</h2>
+                </div>
+                <div class="card-body">
+                    <p>Situé dans le bâtiment « Le 147 » à Issy-les-Moulineaux, le parking de Capgemini est conçu pour répondre aux besoins de ses collaborateurs et visiteurs.</p>
+                    <ul class="list-unstyled">
+                        <li><strong>Adresse :</strong> 147, quai du Président-Roosevelt</li>
+                        <li><strong>Superficie :</strong> 33 250 m² sur 8 étages</li>
+                        <li><strong>Capacité :</strong> 4100 collaborateurs</li>
+                        <li><strong>Certifications :</strong> HQE, BREEAM Very Good, Effinergie+</li>
+                        <li><strong>Services :</strong> Salle de conférence, espace de co-création, salles de réunion</li>
+                    </ul>
+                    <hr>
+                    <p class="text-muted small">Ce parking est une extension de l'expérience collaborative et innovante de Capgemini, alignée sur les valeurs du Groupe.</p>
+                </div>
+            </div>
+
+            <!-- Section: Informations pratiques -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="mb-0">Informations pratiques</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Heures d'ouverture :</strong> 6h - 23h</li>
+                        <li><strong>Accès :</strong> Badge d'entrée requis</li>
+                        <li><strong>Services :</strong> Surveillance 24/7, bornes de recharge pour véhicules électriques</li>
+                    </ul>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <a href="https://facebook.com" target="_blank" class="text-decoration-none text-dark"><i class="fab fa-facebook fa-lg"></i> Facebook</a>
+                        <a href="https://linkedin.com" target="_blank" class="text-decoration-none text-dark"><i class="fab fa-linkedin fa-lg"></i> LinkedIn</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %}
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    function openReservationModal(spotId) {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date' + spotId).setAttribute("min", today);
+        document.getElementById('end_date' + spotId).setAttribute("min", today);
+        const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal' + spotId));
+        reservationModal.show();
+    }
+
+    function openConfirmModal(spotId) {
+        calculateAmount(spotId);
+        const amount = document.getElementById('calculated_amount' + spotId).value;
+
+        Swal.fire({
+            title: 'Confirmer le paiement',
+            text: `Confirmez-vous la réservation pour le montant de ${amount} ?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Payer',
+            cancelButtonText: 'Annuler'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                submitReservationForm(spotId);
+            }
+        });
+    }
+
     function calculateAmount(spotId) {
         const startDate = new Date(document.getElementById('start_date' + spotId).value + 'T' + document.getElementById('start_time' + spotId).value);
         const endDate = new Date(document.getElementById('end_date' + spotId).value + 'T' + document.getElementById('end_time' + spotId).value);
 
         if (startDate && endDate && startDate < endDate) {
             const diffMs = endDate - startDate;
-            const hours = Math.ceil(diffMs / (1000 * 60 * 15)) * 0.25; // Tranches de 15 minutes, arrondi vers le haut
-            const amount = hours * 1; // 1€ par heure
+            const hours = Math.ceil(diffMs / (1000 * 60 * 15)) * 0.25;
+            const amount = hours * 1;
             document.getElementById('calculated_amount' + spotId).value = amount.toFixed(2) + ' €';
-            document.getElementById('confirm_amount' + spotId).innerText = amount.toFixed(2) + ' €';
         } else {
             document.getElementById('calculated_amount' + spotId).value = '0.00 €';
-            document.getElementById('confirm_amount' + spotId).innerText = '0.00 €';
         }
+    }
+
+    function submitReservationForm(spotId) {
+        const form = document.getElementById('reservationForm' + spotId);
+        form.submit();
+        Swal.fire({
+            title: 'Réservation confirmée',
+            text: 'Votre réservation a été confirmée. Un mail de confirmation vous a été envoyé.',
+            icon: 'success'
+        });
     }
 
     document.querySelectorAll('[id^=start_date], [id^=start_time], [id^=end_date], [id^=end_time]').forEach(input => {
@@ -125,3 +365,4 @@
         });
     });
 </script>
+{% endblock %}
